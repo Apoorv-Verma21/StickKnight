@@ -1,0 +1,5 @@
+# A definition that calls itself with no stopping case.
+define countdown with n:
+    give back countdown(n minus 1)
+
+say countdown(5)

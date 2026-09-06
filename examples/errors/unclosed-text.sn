@@ -1,0 +1,3 @@
+# A missing closing quote is blamed on the line the text starts on.
+say "this text never ends
+say "and this line pays for it"

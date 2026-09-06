@@ -1,0 +1,3 @@
+# A reserved word cannot be used as a variable name.
+set repeat to 5
+say repeat

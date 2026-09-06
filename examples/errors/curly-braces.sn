@@ -1,0 +1,4 @@
+# Stickynight has no braces. The lexer says so, and says what to do instead.
+if 1 is 1 {
+    say "hello"
+}

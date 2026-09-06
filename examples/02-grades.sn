@@ -1,0 +1,22 @@
+# The worked example from the project proposal.
+# Multi-word comparisons, an if / otherwise if / otherwise chain,
+# and a definition that gives a value back.
+
+define classify with score:
+    if score is at least 90:
+        give back "A"
+    otherwise if score is at least 75:
+        give back "B"
+    otherwise if score is at least 50:
+        give back "C"
+    otherwise:
+        give back "F"
+
+set marks to 82
+say classify(marks)
+
+# The same definition, used on a whole list of results.
+set results to list of 95, 82, 61, 38
+
+for each mark in results:
+    say mark + " -> " + classify(mark)

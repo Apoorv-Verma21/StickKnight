@@ -1,0 +1,38 @@
+{
+  "name": "stickynight",
+  "version": "1.0.0",
+  "description": "Stickynight - a small programming language with natural, English-phrase syntax. Lexer, recursive-descent parser, tree-walking interpreter and a WebAssembly backend, written from scratch in TypeScript.",
+  "license": "MIT",
+  "main": "dist/src/stickynight.js",
+  "bin": {
+    "stickynight": "dist/src/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node --test \"dist/tests/**/*.test.js\"",
+    "start": "npm run build && node dist/src/cli.js",
+    "bundle": "npm run build && node scripts/bundle.mjs && node scripts/samples.mjs",
+    "playground": "npm run bundle && node scripts/serve.mjs",
+    "artifact": "npm run bundle && node scripts/build-artifact.mjs",
+    "demo": "npm run build && node scripts/demo.mjs"
+  },
+  "keywords": [
+    "compiler",
+    "interpreter",
+    "lexer",
+    "parser",
+    "language-design",
+    "webassembly"
+  ],
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "typescript": "^5.6.3"
+  },
+  "files": [
+    "dist",
+    "examples",
+    "SPEC.md",
+    "README.md",
+    "docs"
+  ]
+}

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+
+# Build outputs of the playground — regenerate with `npm run bundle`.
+playground/bundle.js
+playground/samples.js
+playground/stickynight-playground.html
+
+# Compiler output written next to a source file by `--wasm`.
+examples/**/*.wasm

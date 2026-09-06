@@ -1,0 +1,25 @@
+# Working with text.
+
+set sentence to "  the quick brown fox  "
+set cleaned to trim(sentence)
+
+say "Length before trimming: " + length of sentence
+say "Length after trimming:  " + length of cleaned
+say "In capitals:            " + uppercase(cleaned)
+say "Backwards:              " + reverse(cleaned)
+
+set words to split(cleaned, " ")
+say "That is " + length of words + " words."
+
+for each word in words:
+    say "  - " + word
+
+# Text can be walked one character at a time.
+define count_letter with subject, letter:
+    set found to 0
+    for each character in subject:
+        if character is letter:
+            change found to found + 1
+    give back found
+
+say "The letter o appears " + count_letter(cleaned, "o") + " times."

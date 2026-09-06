@@ -1,0 +1,4 @@
+# A number is not a condition on its own.
+set count to 3
+if count:
+    say "yes"

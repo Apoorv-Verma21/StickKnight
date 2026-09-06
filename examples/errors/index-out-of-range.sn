@@ -1,0 +1,2 @@
+set scores to list of 10, 20, 30
+say item 5 of scores

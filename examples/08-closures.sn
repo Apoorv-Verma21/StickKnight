@@ -1,0 +1,30 @@
+# A definition can be made inside another one, and it keeps hold of the
+# names that surrounded it. That is what makes each counter separate.
+
+define make_counter:
+    set count to 0
+
+    define step:
+        change count to count + 1
+        give back count
+
+    give back step
+
+set tick to make_counter()
+say tick()
+say tick()
+say tick()
+
+# A second counter starts again from the beginning, because it has its own
+# count. The two definitions do not share anything.
+set other to make_counter()
+say other()
+
+# A definition is an ordinary value, so it can be handed to another one.
+define apply_twice with action, start:
+    give back action(action(start))
+
+define double with x:
+    give back x times 2
+
+say apply_twice(double, 5)

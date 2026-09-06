@@ -1,0 +1,24 @@
+# Finding prime numbers.
+# stop leaves the loop as soon as the answer is known.
+
+define is_prime with n:
+    if n is less than 2:
+        give back no
+
+    repeat with d from 2 to n:
+        if d times d is more than n:
+            stop
+        if n mod d is 0:
+            give back no
+
+    give back yes
+
+say "The primes up to 50:"
+
+set found to empty list
+repeat with n from 2 to 50:
+    if is_prime(n):
+        add n to found
+
+say found
+say "That is " + length of found + " of them."

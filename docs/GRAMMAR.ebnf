@@ -1,0 +1,170 @@
+(* ==========================================================================
+   Stickynight — the complete grammar, in EBNF.
+
+   Written on Day 1, before any code, and used directly to derive the
+   recursive-descent parser: every non-terminal below has a method of the same
+   name in src/parser.ts.
+
+   Notation
+     { x }   zero or more
+     [ x ]   optional
+     |       alternation
+     "x"     a literal token
+     (* .. *) a comment
+
+   NEWLINE, INDENT and DEDENT are synthesised by the lexer from the layout of
+   the source; they never appear as characters in a program. See SPEC.md §2.1.
+   ========================================================================== *)
+
+
+(* --------------------------------------------------------------------------
+   Lexical grammar — recognised character by character by src/lexer.ts.
+   These are the rules a DFA built from the equivalent regular expressions
+   would have; the scanner implements them by hand.
+   -------------------------------------------------------------------------- *)
+
+letter          = "a" | ... | "z" | "A" | ... | "Z" ;
+digit           = "0" | ... | "9" ;
+
+IDENTIFIER      = ( letter | "_" ) { letter | digit | "_" } ;
+                  (* and not one of the 47 keywords *)
+
+NUMBER          = digit { digit } [ "." digit { digit } ] ;
+
+TEXT            = '"' { text_char | escape } '"' ;
+text_char       = ? any character except '"', '\' and newline ? ;
+escape          = "\" ( "n" | "t" | '"' | "\" ) ;
+
+comment         = "#" { ? any character except newline ? } ;
+
+(* Layout tokens. The lexer keeps a stack of indentation columns: a wider line
+   pushes and emits INDENT, a narrower one pops and emits one DEDENT per level
+   closed. Blank and comment-only lines are skipped entirely and never change
+   the stack. *)
+
+
+(* --------------------------------------------------------------------------
+   Statements
+   -------------------------------------------------------------------------- *)
+
+program         = { statement } EOF ;
+
+statement       = set_stmt
+                | change_stmt
+                | say_stmt
+                | add_stmt
+                | if_stmt
+                | repeat_stmt
+                | for_each_stmt
+                | define_stmt
+                | return_stmt
+                | stop_stmt
+                | skip_stmt
+                | expression_stmt ;
+
+set_stmt        = "set" IDENTIFIER "to" expression NEWLINE ;
+
+change_stmt     = "change" ( IDENTIFIER | index_expr ) "to" expression NEWLINE ;
+
+say_stmt        = "say" expression NEWLINE ;
+
+add_stmt        = "add" expression "to" expression NEWLINE ;
+
+if_stmt         = "if" expression block
+                  { "otherwise" "if" expression block }
+                  [ "otherwise" block ] ;
+
+repeat_stmt     = "repeat" count "times" block
+                | "repeat" "with" IDENTIFIER
+                           "from" expression
+                           "to"   expression
+                           [ "by" expression ] block
+                | "repeat" "while" expression block ;
+
+for_each_stmt   = "for" "each" IDENTIFIER "in" expression block ;
+
+define_stmt     = "define" IDENTIFIER
+                  [ "with" IDENTIFIER { "," IDENTIFIER } ] block ;
+
+return_stmt     = "give" "back" [ expression ] NEWLINE ;
+
+stop_stmt       = "stop" NEWLINE ;
+
+skip_stmt       = "skip" NEWLINE ;
+
+expression_stmt = expression NEWLINE ;
+
+(* A block is either indented lines, or a single statement on the same line
+   after the colon. *)
+block           = ":" NEWLINE INDENT statement { statement } DEDENT
+                | ":" statement ;
+
+(* `count` is `expression` with one restriction: the word "times" is not
+   treated as the multiply operator while it is being read, because the
+   trailing "times" belongs to the repeat statement. The symbol "*" is a
+   different token and is NOT restricted, so `repeat rows * cols times:`
+   parses. See SPEC.md §9.2. *)
+count           = expression ;
+
+
+(* --------------------------------------------------------------------------
+   Expressions — loosest precedence first, so each rule calls the next one
+   down. This layering IS the precedence table.
+   -------------------------------------------------------------------------- *)
+
+expression      = or_expr ;
+
+or_expr         = and_expr { "or" and_expr } ;
+
+and_expr        = not_expr { "and" not_expr } ;
+
+(* 'not' binds looser than comparison, so `not a is 1` is `not (a is 1)`. *)
+not_expr        = "not" not_expr
+                | comparison ;
+
+comparison      = term { compare_phrase term } ;
+
+(* The multi-word operators. The lexer emits one token per word; this rule is
+   where they are folded into a single operator, with fixed lookahead and no
+   backtracking. *)
+compare_phrase  = "is" [ "not" [ "equal" "to" ]
+                       | "at" ( "least" | "most" )
+                       | ( "more" | "greater" ) "than"
+                       | "less" "than"
+                       | "equal" "to" ] ;
+
+term            = factor { ( "+" | "plus" | "-" | "minus" ) factor } ;
+
+factor          = unary { ( "*" | "times"
+                          | "/" | "divided" "by"
+                          | "%" | "mod" ) unary } ;
+
+unary           = ( "-" | "minus" ) unary
+                | postfix ;
+
+postfix         = primary { "(" [ arguments ] ")" } ;
+
+arguments       = expression { "," expression } ;
+
+primary         = NUMBER
+                | TEXT
+                | "yes" | "no" | "true" | "false"
+                | "nothing"
+                | IDENTIFIER
+                | "(" expression ")"
+                | list_expr
+                | index_expr
+                | length_expr ;
+
+(* `list of` takes items greedily to the end of the expression, so a list
+   inside a call has to be bracketed: f((list of 1, 2), x). SPEC.md §9.4. *)
+list_expr       = "list" "of" expression { "," expression }
+                | "empty" "list" ;
+
+(* Positions count from 1. The collection is parsed at postfix level so that
+   `item 1 of scores + 1` means `(item 1 of scores) + 1`. *)
+index_expr      = "item" expression "of" postfix ;
+
+(* Both spellings mean the same thing; the second reaches the built-in. *)
+length_expr     = "length" "of" postfix
+                | "length" "(" [ arguments ] ")" ;

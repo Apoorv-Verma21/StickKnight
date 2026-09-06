@@ -1,0 +1,16 @@
+# Your first Stickynight program.
+# Run it with:  node dist/src/cli.js examples/01-hello.sn
+
+say "Hello, world!"
+
+# 'set' gives a name to a value.
+set name to "Sahaj"
+say "Hello, " + name + "!"
+
+# If either side of '+' is text, the two are joined together.
+set year to 2026
+say "The year is " + year
+
+# 'change' updates a name that already exists.
+change name to "everyone"
+say "Goodbye, " + name + "!"

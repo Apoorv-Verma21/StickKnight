@@ -1,0 +1,32 @@
+# Lists.
+# Positions start at 1, so "item 1 of scores" is the first one.
+
+set scores to list of 88, 92, 41, 67, 95
+
+say "How many:      " + length of scores
+say "The first one: " + item 1 of scores
+say "The last one:  " + item (length of scores) of scores
+say "Added up:      " + sum(scores)
+say "The biggest:   " + maximum(scores)
+
+say "In order:"
+say sort(scores)
+
+# A list can be built up one item at a time.
+set names to empty list
+add "Asha" to names
+add "Ravi" to names
+add "Meera" to names
+
+for each name in names:
+    say "Hello, " + name
+
+say join(names, " and ")
+
+# One item of a list can be replaced.
+set numbers to list of 1, 2, 3
+change item 2 of numbers to 99
+say numbers
+
+# Two lists join with '+'.
+say (list of 1, 2) + (list of 3, 4)

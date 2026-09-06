@@ -1,0 +1,4 @@
+# Arithmetic on text that is not a number.
+set price to "twelve"
+set quantity to 3
+say price times quantity

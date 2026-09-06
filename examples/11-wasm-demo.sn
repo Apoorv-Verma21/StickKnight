@@ -1,0 +1,39 @@
+# A numbers-only program, so the WebAssembly back end can compile it.
+#
+#   node dist/src/cli.js examples/11-wasm-demo.sn             the interpreter
+#   node dist/src/cli.js --wat examples/11-wasm-demo.sn       the generated code
+#   node dist/src/cli.js --compiled examples/11-wasm-demo.sn  compiled, then run
+#
+# The last two print exactly what the first one does.
+
+define factorial with n:
+    if n is at most 1:
+        give back 1
+    give back n times factorial(n minus 1)
+
+define greatest_common_divisor with a, b:
+    repeat while b is not 0:
+        set held to b
+        change b to a mod b
+        change a to held
+    give back a
+
+define collatz_length with start:
+    set current to start
+    set steps to 0
+    repeat while current is not 1:
+        if current mod 2 is 0:
+            change current to current divided by 2
+        otherwise:
+            change current to 3 times current + 1
+        change steps to steps + 1
+    give back steps
+
+say factorial(10)
+say greatest_common_divisor(1071, 462)
+say collatz_length(27)
+
+set total to 0
+repeat with i from 1 to 100:
+    change total to total + i
+say total

@@ -1,0 +1,5 @@
+# Calling a definition with the wrong number of inputs.
+define greet with first, last:
+    give back "Hello, " + first + " " + last
+
+say greet("Ada")

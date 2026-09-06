@@ -1,0 +1,3 @@
+set items to 0
+set total to 100
+say total divided by items

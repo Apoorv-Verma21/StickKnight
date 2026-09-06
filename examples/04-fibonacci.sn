@@ -1,0 +1,24 @@
+# The same sequence computed two ways.
+
+# Recursively: the definition calls itself.
+define fib_slow with n:
+    if n is at most 1:
+        give back n
+    give back fib_slow(n minus 1) + fib_slow(n minus 2)
+
+# With a loop: much faster, because nothing is computed twice.
+define fib_fast with n:
+    set a to 0
+    set b to 1
+    repeat n times:
+        set next to a + b
+        change a to b
+        change b to next
+    give back a
+
+say "The first eleven, worked out recursively:"
+repeat with i from 0 to 10:
+    say fib_slow(i)
+
+say "The thirtieth, worked out with a loop:"
+say fib_fast(30)

@@ -1,0 +1,4 @@
+# Comparisons are written in words.
+set age to 20
+if age >= 18:
+    say "old enough"

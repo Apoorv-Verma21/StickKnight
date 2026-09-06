@@ -1,0 +1,35 @@
+# Every kind of loop, plus stop and skip.
+
+say "Counting up:"
+repeat with i from 1 to 5:
+    say i
+
+say "Counting down:"
+repeat with i from 5 to 1 by -1:
+    say i
+
+say "In steps of 3:"
+repeat with i from 0 to 12 by 3:
+    say i
+
+say "A fixed number of turns:"
+repeat 3 times:
+    say "hello"
+
+say "Until something becomes true:"
+set n to 1
+repeat while n is less than 100:
+    change n to n times 2
+say n
+
+say "Skipping the odd numbers:"
+repeat with i from 1 to 10:
+    if i mod 2 is not 0:
+        skip
+    say i
+
+say "Stopping early:"
+repeat with i from 1 to 100:
+    if i is more than 4:
+        stop
+    say i

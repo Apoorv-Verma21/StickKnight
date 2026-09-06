@@ -1,0 +1,13 @@
+# FizzBuzz.
+# 'mod' is the remainder after dividing, so "n mod 3 is 0" means
+# that n divides exactly by 3.
+
+repeat with n from 1 to 20:
+    if n mod 15 is 0:
+        say "FizzBuzz"
+    otherwise if n mod 3 is 0:
+        say "Fizz"
+    otherwise if n mod 5 is 0:
+        say "Buzz"
+    otherwise:
+        say n

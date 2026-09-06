@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stickynight Playground</title>
+<meta name="description" content="Write and run Stickynight — a small language with English-phrase syntax — and watch it go through the lexer, parser and WebAssembly code generator.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="playground.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>Stickynight</h1>
+    <span class="tagline">a small language that reads like instructions</span>
+  </div>
+
+  <select id="samples" aria-label="Load an example program"></select>
+  <button id="cheat-toggle" aria-expanded="false" aria-controls="cheatsheet">Cheat sheet</button>
+  <button id="theme">Light</button>
+  <button id="run" class="primary">Run <span class="shortcut">Ctrl+&#9166;</span></button>
+</header>
+
+<main>
+  <section class="pane">
+    <div class="pane-head">
+      <span class="pane-title">Program</span>
+    </div>
+    <div class="editor" id="editor">
+      <div class="gutter" id="gutter" aria-hidden="true">1</div>
+      <div class="code-area">
+        <pre aria-hidden="true"><code id="highlight"></code></pre>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"
+                  autocorrect="off" aria-label="Stickynight program"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="pane-head" role="tablist" aria-label="Compiler stage">
+      <span class="pane-title">Stage</span>
+      <button class="tab" role="tab" data-tab="output" aria-selected="true">Output</button>
+      <button class="tab" role="tab" data-tab="tokens" aria-selected="false">Tokens</button>
+      <button class="tab" role="tab" data-tab="ast" aria-selected="false">Tree</button>
+      <button class="tab" role="tab" data-tab="wasm" aria-selected="false">WebAssembly</button>
+    </div>
+    <pre class="output" id="output" role="tabpanel" aria-live="polite"></pre>
+  </section>
+</main>
+
+<div class="cheatsheet" id="cheatsheet" hidden>
+  <div class="inner">
+    <div>
+      <h3>Names</h3>
+      <code>set total to 0</code>
+      <code>change total to total + 1</code>
+      <code>say "Hello, " + name</code>
+    </div>
+    <div>
+      <h3>Deciding</h3>
+      <code>if score is at least 90:</code>
+      <code>otherwise if score is at least 50:</code>
+      <code>otherwise:</code>
+      <code><span class="c">not / and / or</span></code>
+    </div>
+    <div>
+      <h3>Comparing</h3>
+      <code>is &nbsp; is not</code>
+      <code>is at least &nbsp; is at most</code>
+      <code>is more than &nbsp; is less than</code>
+    </div>
+    <div>
+      <h3>Repeating</h3>
+      <code>repeat 3 times:</code>
+      <code>repeat with i from 1 to 10:</code>
+      <code>repeat with i from 10 to 1 by -1:</code>
+      <code>repeat while n is less than 100:</code>
+      <code>for each name in names:</code>
+      <code>stop &nbsp; skip</code>
+    </div>
+    <div>
+      <h3>Definitions</h3>
+      <code>define greet with name:</code>
+      <code>&nbsp;&nbsp;&nbsp;&nbsp;give back "Hi, " + name</code>
+      <code>say greet("Ada")</code>
+    </div>
+    <div>
+      <h3>Lists <span class="c">(positions start at 1)</span></h3>
+      <code>set scores to list of 1, 2, 3</code>
+      <code>set empty to empty list</code>
+      <code>add 4 to scores</code>
+      <code>say item 1 of scores</code>
+      <code>say length of scores</code>
+      <code>change item 2 of scores to 9</code>
+    </div>
+    <div>
+      <h3>Arithmetic</h3>
+      <code>+ &nbsp;-&nbsp; * &nbsp;/&nbsp; %</code>
+      <code>plus &nbsp; minus &nbsp; times</code>
+      <code>divided by &nbsp; mod</code>
+    </div>
+    <div>
+      <h3>Built-ins</h3>
+      <code>text number length type_of</code>
+      <code>uppercase lowercase trim</code>
+      <code>split join characters reverse</code>
+      <code>round floor ceiling absolute</code>
+      <code>square_root minimum maximum</code>
+      <code>sum sort contains position_of copy</code>
+      <code>random random_between</code>
+    </div>
+    <div>
+      <h3>The four tabs</h3>
+      <code><span class="c">Output &nbsp;— the interpreter runs it</span></code>
+      <code><span class="c">Tokens &nbsp;— what the lexer made</span></code>
+      <code><span class="c">Tree &nbsp;&nbsp;&nbsp;— what the parser built</span></code>
+      <code><span class="c">WebAssembly — compiled code</span></code>
+    </div>
+  </div>
+</div>
+
+<div class="statusbar">
+  <span id="status">Ready.</span>
+  <span class="spacer"></span>
+  <span id="counts"></span>
+</div>
+
+<script src="bundle.js"></script>
+<script src="samples.js"></script>
+<script src="playground.js"></script>
+</body>
+</html>

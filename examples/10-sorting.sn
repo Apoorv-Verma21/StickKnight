@@ -1,0 +1,21 @@
+# Bubble sort, written out in full.
+# It works on a copy, so the list that was handed in is left alone.
+
+define bubble_sort with values:
+    set data to copy(values)
+    set n to length of data
+
+    repeat with pass from 1 to n minus 1:
+        repeat with i from 1 to n minus pass:
+            if item i of data is more than item (i + 1) of data:
+                set held to item i of data
+                change item i of data to item (i + 1) of data
+                change item (i + 1) of data to held
+
+    give back data
+
+set numbers to list of 5, 3, 9, 1, 7, 2
+
+say "Before:    " + numbers
+say "After:     " + bubble_sort(numbers)
+say "Untouched: " + numbers

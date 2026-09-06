@@ -1,0 +1,4 @@
+# The lexer catches this: line 4 lines up with nothing.
+if 1 is 1:
+        say "eight spaces in"
+      say "six spaces in"

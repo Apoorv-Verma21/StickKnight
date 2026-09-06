@@ -1,0 +1,4 @@
+# Run this with --steps 1000 and it reports itself instead of hanging.
+set n to 1
+repeat while n is more than 0:
+    change n to n + 1

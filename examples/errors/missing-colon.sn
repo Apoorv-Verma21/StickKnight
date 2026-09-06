@@ -1,0 +1,4 @@
+# A block header has to end with a colon.
+set score to 90
+if score is at least 50
+    say "pass"
