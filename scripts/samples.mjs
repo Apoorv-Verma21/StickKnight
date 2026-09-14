@@ -43,6 +43,7 @@ const ERROR_TITLES = {
   "endless-loop.sn": "Mistake: a loop that never ends",
   "keyword-as-name.sn": "Mistake: a keyword used as a name",
   "divide-by-zero.sn": "Mistake: dividing by zero",
+  "several-mistakes.sn": "Mistake: four at once — try --check",
 };
 
 function collect(dir, titles) {

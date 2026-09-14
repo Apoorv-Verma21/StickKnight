@@ -103,7 +103,9 @@ export class Parser {
         this.errors.push(error);
         if (!this.synchronize()) break;
       }
-      this.skipBlankLines();
+      // Layout rather than blank lines: after a recovery the indentation no
+      // longer lines up with anything, and re-reporting that is just noise.
+      this.skipLayout();
     }
 
     return { program: { kind: "Program", statements }, errors: this.errors };
@@ -112,23 +114,45 @@ export class Parser {
   /**
    * Panic-mode recovery: drop tokens until the start of the next line that
    * could begin a statement. Returns false when there is nothing left.
+   *
+   * A line can start after any of the three layout tokens, not just NEWLINE:
+   * a block opening produces INDENT and a block closing produces DEDENT, and
+   * the first statement of the recovered line sits directly after one of
+   * those. Only looking for NEWLINE means a mistake anywhere above an
+   * indented block swallows the whole rest of the file.
    */
   private synchronize(): boolean {
     while (!this.isAtEnd()) {
-      const previous = this.tokens[this.position - 1];
-      if (previous && previous.type === T.NEWLINE && STATEMENT_STARTERS.has(this.peek().type)) {
-        return true;
-      }
       this.position++;
       if (this.isAtEnd()) return false;
-      if (this.check(T.NEWLINE)) {
-        this.position++;
-        this.skipBlankLines();
-        if (this.isAtEnd()) return false;
-        if (STATEMENT_STARTERS.has(this.peek().type)) return true;
-      }
+
+      const previous = this.tokens[this.position - 1];
+      const atLineStart =
+        previous.type === T.NEWLINE ||
+        previous.type === T.INDENT ||
+        previous.type === T.DEDENT;
+
+      if (atLineStart && STATEMENT_STARTERS.has(this.peek().type)) return true;
     }
     return false;
+  }
+
+  /**
+   * Skip layout tokens outright.
+   *
+   * Used only while recovering. Once a statement has been abandoned the block
+   * structure around it is no longer trustworthy, so a stray INDENT or DEDENT
+   * left over from the broken line would otherwise be reported as a second,
+   * imaginary mistake on top of the real one.
+   */
+  private skipLayout(): void {
+    while (
+      this.check(T.NEWLINE) ||
+      this.check(T.INDENT) ||
+      this.check(T.DEDENT)
+    ) {
+      this.position++;
+    }
   }
 
   // =======================================================================

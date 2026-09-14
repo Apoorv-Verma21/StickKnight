@@ -139,6 +139,7 @@ describe("error examples: each fails at the stage it demonstrates", () => {
     "index-out-of-range.sn": "Runtime",
     "number-as-condition.sn": "Runtime",
     "runaway-recursion.sn": "Runtime",
+    "several-mistakes.sn": "Syntax",
     "type-mix.sn": "Runtime",
     "unknown-name.sn": "Runtime",
     "wrong-args.sn": "Runtime",

@@ -1,0 +1,20 @@
+# Four separate mistakes in one file.
+#
+# Running this stops at the first one, the way most compilers do.
+# Checking it reports ALL of them in a single pass:
+#
+#     node dist/src/cli.js --check examples/errors/several-mistakes.sn
+#
+# That is panic-mode recovery: the parser records the error, throws away
+# tokens until a line that could start a new statement, and carries on.
+
+set total to
+say "the line above never says what to set it to"
+
+if total is at least 10
+    say "the line above is missing its colon"
+
+define add_up with a, a:
+    give back a
+
+say total +

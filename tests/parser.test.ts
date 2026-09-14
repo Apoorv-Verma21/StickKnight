@@ -246,6 +246,23 @@ describe("parser: panic-mode recovery", () => {
     assert.equal(toSExpression(program), "(say 1)");
   });
 
+  it("keeps going past an indented block, not just past a flat line", () => {
+    // A mistake above a block used to swallow the rest of the file, because
+    // the resync point after a block is an INDENT or DEDENT, not a NEWLINE.
+    const source = [
+      "set a to",
+      "if yes:",
+      "    say 1",
+      "define f with x, x:",
+      "    give back x",
+      "say b +",
+      "",
+    ].join("\n");
+
+    const { errors } = parseWithRecovery(tokenize(source));
+    assert.deepEqual(errors.map((e) => e.line), [1, 4, 6]);
+  });
+
   it("finds nothing wrong with a correct program", () => {
     const { errors } = parseWithRecovery(tokenize("set a to 1\nsay a\n"));
     assert.equal(errors.length, 0);
