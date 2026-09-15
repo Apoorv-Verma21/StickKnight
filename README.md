@@ -217,7 +217,7 @@ end was still writing the scanner. When both were ready the mock was swapped
 for the real lexer.
 
 `tests/integration.test.ts` keeps that swap honest: it asserts the real lexer
-still produces exactly the stream that was agreed on Day 1.
+still produces exactly the stream that was agreed on Day 1.....
 
 ---
 
