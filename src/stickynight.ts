@@ -10,6 +10,8 @@
  *                                                  └──compile────▶ .wat / .wasm
  */
 
+import { ask, explainProgram, ModelBackend } from "./assistant";
+import type { Answer } from "./assistant";
 import { Program } from "./ast";
 import { printAst, toSExpression } from "./ast-printer";
 import { StickynightError } from "./errors";
@@ -143,6 +145,29 @@ function formatWasmNumber(value: number): string {
   return String(Number(value.toPrecision(12)));
 }
 
+// --- the assistant -----------------------------------------------------------
+
+/**
+ * Answer a question about Stickynight, optionally about a particular program.
+ *
+ * Everything it can answer from the compiler, it answers from the compiler:
+ * a broken program gets the real error, a working one gets a walk over the
+ * real AST. A model backend is only consulted for what is left over, and only
+ * when the host supplies one.
+ */
+export async function askAssistant(
+  question: string,
+  program?: string,
+  backend?: ModelBackend | null
+): Promise<Answer> {
+  return ask({ question, program, backend });
+}
+
+/** Describe what a program does, in English, by walking its AST. */
+export function explainSource(source: string): string {
+  return explainProgram(parseSource(source));
+}
+
 // --- error rendering ---------------------------------------------------------
 
 export function formatError(
@@ -164,6 +189,8 @@ export { Parser, parse, parseWithRecovery } from "./parser";
 export { printAst, toSExpression } from "./ast-printer";
 export { TokenType, KEYWORD_LIST } from "./token";
 export { BUILTIN_NAMES, builtinHelp } from "./builtins";
+export { ask, explainProgram, summarise, rank, topics, systemPrompt, ENTRIES } from "./assistant";
+export type { Answer, AskRequest, ModelBackend, Source } from "./assistant";
 export { compileToWasm } from "./wasm/compiler";
 export { emitWat } from "./wasm/wat";
 export { emitBinary, runWasm } from "./wasm/binary";

@@ -19,6 +19,7 @@
   </div>
 
   <select id="samples" aria-label="Load an example program"></select>
+  <button id="assistant-toggle" aria-expanded="false" aria-controls="assistant">Ask</button>
   <button id="cheat-toggle" aria-expanded="false" aria-controls="cheatsheet">Cheat sheet</button>
   <button id="theme">Light</button>
   <button id="run" class="primary">Run <span class="shortcut">Ctrl+&#9166;</span></button>
@@ -50,6 +51,17 @@
     <pre class="output" id="output" role="tabpanel" aria-live="polite"></pre>
   </section>
 </main>
+
+<section class="assistant" id="assistant" aria-label="Assistant" hidden>
+  <div class="chat-log" id="chat-log" aria-live="polite"></div>
+  <form class="chat-input" id="chat-form">
+    <input id="chat-text" type="text" autocomplete="off" spellcheck="false"
+           placeholder="Ask about the language, or about the program on the left…"
+           aria-label="Ask the assistant">
+    <button id="chat-send" class="primary" type="submit">Ask</button>
+  </form>
+  <div class="chat-foot"><span id="chat-status">Answering offline, from the compiler itself</span></div>
+</section>
 
 <div class="cheatsheet" id="cheatsheet" hidden>
   <div class="inner">
@@ -131,5 +143,6 @@
 <script src="bundle.js"></script>
 <script src="samples.js"></script>
 <script src="playground.js"></script>
+<script src="assistant.js"></script>
 </body>
 </html>

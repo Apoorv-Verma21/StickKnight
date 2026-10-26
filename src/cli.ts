@@ -17,6 +17,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import {
+  askAssistant,
   astReport,
   FILE_EXTENSION,
   formatError,
@@ -26,12 +27,14 @@ import {
   runSource,
   sexpressionReport,
   StickynightError,
+  explainSource,
   tokenReport,
   VERSION,
   wasmBytes,
   watReport,
 } from "./stickynight";
 import { startRepl } from "./repl";
+import { createAnthropicBackend, status as backendStatus } from "./assistant/llm";
 
 const USAGE = `${LANGUAGE_NAME} ${VERSION}
 
@@ -46,6 +49,11 @@ Look inside each stage:
   --wasm <file>      write a runnable .wasm binary next to the source
   --compiled <file>  compile to WebAssembly and run that instead of the tree
   --check <file>     report every syntax error without running anything
+
+Ask the assistant:
+  ask "<question>" [file]   ask about the language, or about a program
+  --explain <file>          say what a program does, in English
+  --ai                      report whether the model backend is switched on
 
 Other:
   --no-color         plain output, no escape codes
@@ -63,10 +71,14 @@ interface Options {
     | "wasm"
     | "compiled"
     | "check"
+    | "ask"
+    | "explain"
+    | "ai"
     | "repl"
     | "help"
     | "version";
   file: string | null;
+  question: string | null;
   color: boolean;
   steps: number;
 }
@@ -75,6 +87,7 @@ function parseArgs(argv: string[]): Options {
   const options: Options = {
     mode: "repl",
     file: null,
+    question: null,
     color: process.stdout.isTTY === true && !process.env.NO_COLOR,
     steps: Infinity,
   };
@@ -113,6 +126,15 @@ function parseArgs(argv: string[]): Options {
       case "--check":
         options.mode = "check";
         break;
+      case "--explain":
+        options.mode = "explain";
+        break;
+      case "--ai":
+        options.mode = "ai";
+        return options;
+      case "ask":
+        options.mode = "ask";
+        break;
       case "run":
         options.mode = "run";
         break;
@@ -130,6 +152,15 @@ function parseArgs(argv: string[]): Options {
         }
         rest.push(arg);
     }
+  }
+
+  if (options.mode === "ask") {
+    // Everything that is not a .sn path is part of the question.
+    const files = rest.filter((arg) => /\.sn$/i.test(arg));
+    const words = rest.filter((arg) => !/\.sn$/i.test(arg));
+    options.question = words.join(" ").trim() || null;
+    options.file = files[0] ?? null;
+    return options;
   }
 
   if (rest.length > 0) {
@@ -155,6 +186,50 @@ async function main(): Promise<void> {
 
   if (options.mode === "repl") {
     await startRepl();
+    return;
+  }
+
+  if (options.mode === "ai") {
+    const current = backendStatus();
+    if (current.available) {
+      console.log(`The model backend is on, using ${current.model}.`);
+      console.log("Questions the assistant cannot answer from the compiler go to it.");
+    } else {
+      console.log("The model backend is off, so the assistant answers offline only.");
+      console.log(`  ${current.message}`);
+      console.log("");
+      console.log("Offline, it still reads your program's real errors, walks its syntax");
+      console.log("tree to explain it, runs it, and answers from the language reference.");
+    }
+    return;
+  }
+
+  if (options.mode === "ask") {
+    if (!options.question) {
+      console.error('Ask me something, for example:  stickynight ask "how do I write a loop?"');
+      process.exit(2);
+    }
+
+    const attached =
+      options.file && fs.existsSync(options.file)
+        ? fs.readFileSync(options.file, "utf8")
+        : undefined;
+
+    const answer = await askAssistant(
+      options.question,
+      attached,
+      createAnthropicBackend()
+    );
+
+    console.log(answer.text);
+    if (answer.code) {
+      console.log("");
+      console.log(answer.code.trimEnd());
+    }
+    if (answer.related && answer.related.length > 0) {
+      console.log("");
+      console.log(`Related: ${answer.related.join(", ")}`);
+    }
     return;
   }
 
@@ -194,6 +269,10 @@ async function main(): Promise<void> {
         );
         return;
       }
+
+      case "explain":
+        console.log(explainSource(source));
+        return;
 
       case "check": {
         const { errors } = parseSourceReportingAll(source);

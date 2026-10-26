@@ -46,16 +46,40 @@ function resolveId(fromId, request) {
   return path.posix.normalize(path.posix.join(dir, request)).replace(/^\.\//, "");
 }
 
+/**
+ * Find the file behind a module id, allowing a directory with an index — so
+ * `require("./assistant")` finds `assistant/index.js`, the way Node does.
+ */
+function locate(id) {
+  const base = path.join(source, ...id.split("/"));
+  if (fs.existsSync(base + ".js")) return base + ".js";
+  const index = path.join(base, "index.js");
+  if (fs.existsSync(index)) return index;
+  return null;
+}
+
+/**
+ * The id a request is recorded under. A directory import becomes
+ * `<dir>/index`, so that relative requires INSIDE that module resolve against
+ * the directory rather than against its parent.
+ */
+function canonical(id) {
+  const base = path.join(source, ...id.split("/"));
+  if (fs.existsSync(base + ".js")) return id;
+  if (fs.existsSync(path.join(base, "index.js"))) return id + "/index";
+  return id;
+}
+
 const modules = new Map();
-const queue = [ENTRY];
+const queue = [canonical(ENTRY)];
 
 while (queue.length > 0) {
   const id = queue.shift();
   if (modules.has(id)) continue;
 
-  const file = path.join(source, ...id.split("/")) + ".js";
-  if (!fs.existsSync(file)) {
-    throw new Error(`bundle: cannot find ${id} (looked for ${file})`);
+  const file = locate(id);
+  if (!file) {
+    throw new Error(`bundle: cannot find ${id} under ${source}`);
   }
 
   const code = fs.readFileSync(file, "utf8");
@@ -67,7 +91,7 @@ while (queue.length > 0) {
         `bundle: ${id} requires the built-in module '${request}', which cannot run in a browser`
       );
     }
-    queue.push(resolveId(id, request));
+    queue.push(canonical(resolveId(id, request)));
   }
 }
 
@@ -98,6 +122,8 @@ parts.push(`    return out.join("/");`);
 parts.push(`  }`);
 parts.push(``);
 parts.push(`  function load(id) {`);
+parts.push(`    // A directory import resolves to its index, as in Node.`);
+parts.push(`    if (!definitions[id] && definitions[id + "/index"]) id = id + "/index";`);
 parts.push(`    if (cache[id]) return cache[id].exports;`);
 parts.push(`    var definition = definitions[id];`);
 parts.push(`    if (!definition) throw new Error("Stickynight bundle: no module '" + id + "'");`);
@@ -117,7 +143,7 @@ for (const id of ordered) {
   parts.push(``);
 }
 
-parts.push(`  var api = load(${JSON.stringify(ENTRY)});`);
+parts.push(`  var api = load(${JSON.stringify(canonical(ENTRY))});`);
 parts.push(`  if (typeof window !== "undefined") window.Stickynight = api;`);
 parts.push(`  if (typeof globalThis !== "undefined") globalThis.Stickynight = api;`);
 parts.push(`})();`);

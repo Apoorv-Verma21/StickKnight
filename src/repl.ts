@@ -16,12 +16,14 @@ import { formatTokens, tokenize } from "./lexer";
 import { printAst } from "./ast-printer";
 import { parse } from "./parser";
 import { stringify } from "./values";
-import { LANGUAGE_NAME, VERSION } from "./stickynight";
+import { askAssistant, LANGUAGE_NAME, VERSION } from "./stickynight";
+import { createAnthropicBackend } from "./assistant/llm";
 
 const BANNER = `${LANGUAGE_NAME} ${VERSION}
 Type a statement and press Enter. A line ending in ':' starts a block —
 keep typing, and press Enter on an empty line to run it.
-Commands: .help  .builtins  .vars  .tokens <code>  .ast <code>  .clear  .quit`;
+Commands: .help  .builtins  .vars  .tokens <code>  .ast <code>  .clear  .quit
+Ask a question:  .ask how do I write a loop?`;
 
 export async function startRepl(): Promise<void> {
   const rl = readline.createInterface({
@@ -37,6 +39,9 @@ export async function startRepl(): Promise<void> {
 
   /** Lines collected so far for a multi-line block. */
   let buffer: string[] = [];
+
+  /** Every statement run this session, so the assistant can be asked about it. */
+  const history: string[] = [];
 
   console.log(BANNER);
   rl.prompt();
@@ -64,6 +69,7 @@ export async function startRepl(): Promise<void> {
       const [command, ...rest] = line.split(" ");
       const argument = rest.join(" ");
 
+      void (async () => {
       switch (command) {
         case ".quit":
         case ".exit":
@@ -101,6 +107,28 @@ export async function startRepl(): Promise<void> {
           console.log("Everything has been forgotten.");
           break;
 
+        case ".ask": {
+          if (!argument.trim()) {
+            console.log('Ask me something, for example:  .ask how do I write a loop?');
+            break;
+          }
+          // The prompt keeps everything typed so far, so the assistant can be
+          // asked about the session's own code as well as about the language.
+          const answer = await askAssistant(
+            argument,
+            history.join("\n"),
+            createAnthropicBackend()
+          );
+          console.log("");
+          console.log(answer.text);
+          if (answer.code) {
+            console.log("");
+            console.log(answer.code.trimEnd());
+          }
+          console.log("");
+          break;
+        }
+
         case ".tokens":
           try {
             console.log(formatTokens(tokenize(argument)));
@@ -122,6 +150,7 @@ export async function startRepl(): Promise<void> {
       }
 
       rl.prompt();
+      })();
       return;
     }
 
@@ -144,6 +173,7 @@ export async function startRepl(): Promise<void> {
   function evaluate(source: string): void {
     try {
       const program = parse(tokenize(source));
+      history.push(source);
 
       // A lone expression at the prompt prints its value, so that typing
       // `2 plus 2` does something useful without needing `say`.

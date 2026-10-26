@@ -34,5 +34,8 @@
     "SPEC.md",
     "README.md",
     "docs"
-  ]
+  ],
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^1.3.0"
+  }
 }

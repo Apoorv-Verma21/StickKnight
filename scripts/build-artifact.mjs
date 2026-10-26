@@ -31,6 +31,7 @@ const css = read("playground.css");
 const bundle = read("bundle.js");
 const samples = read("samples.js");
 const script = read("playground.js");
+const assistant = read("assistant.js");
 
 /** The markup between <body> and </body>, minus the <script> tags. */
 function bodyOf(document) {
@@ -93,6 +94,11 @@ const out = [
   "",
   "<script>",
   safeScript(script.trim()),
+  "</script>",
+  "",
+  "<!-- the chat panel; the assistant itself is inside the bundle above -->",
+  "<script>",
+  safeScript(assistant.trim()),
   "</script>",
   "",
 ].join("\n");

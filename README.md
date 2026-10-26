@@ -32,7 +32,7 @@ npm run build
 
 node dist/src/cli.js examples/02-grades.sn     # run a program
 node dist/src/cli.js                           # interactive prompt
-npm test                                       # 308 tests
+npm test                                       # 386 tests
 npm run playground                             # the browser playground
 ```
 
@@ -93,6 +93,12 @@ src/
   environment.ts        the scope chain
   builtins.ts           the standard library
   interpreter.ts        the tree-walking evaluator
+  assistant/
+    knowledge.ts        the lessons; every example is run by the test suite
+    retrieve.ts         term scoring, synonyms, light stemming
+    explain.ts          AST -> English, the tree's fourth consumer
+    llm.ts              the optional model backend (the only networked file)
+    index.ts            routing: diagnose / explain / run / retrieve / model
   wasm/
     ir.ts               low-level IR: one instruction list per function
     compiler.ts         AST  -> IR   (lowering, alpha renaming, branch depths)
@@ -105,7 +111,7 @@ src/
 examples/               eleven programs, one per feature
 examples/errors/        fourteen deliberately broken ones
 playground/             the browser playground
-tests/                  308 tests across six files
+tests/                  386 tests across seven files
 ```
 
 ---
@@ -123,6 +129,9 @@ stickynight                    interactive prompt
   --wasm <file>      write a runnable .wasm binary
   --compiled <file>  compile to WebAssembly and run that
   --check <file>     report every syntax error without running anything
+  --explain <file>   say what a program does, in English
+  ask "<question>"   ask the assistant (add a file for context)
+  --ai               report whether a model backend is configured
   --steps <n>        stop after n statements (guards an endless loop)
   --no-color
 ```
@@ -132,6 +141,49 @@ The prompt keeps its state between lines, and understands `.help`,
 A line ending in `:` opens a block; a blank line closes it and runs it.
 
 ---
+
+## The assistant
+
+```bash
+node dist/src/cli.js ask "how do I write a loop?"
+node dist/src/cli.js ask "what is wrong with this?" examples/errors/unknown-name.sn
+node dist/src/cli.js --explain examples/02-grades.sn
+node dist/src/cli.js --ai                       # is a model backend configured?
+```
+
+A built-in assistant that is **grounded in the compiler rather than in a
+model's memory**. Four of its five answer paths need no network at all:
+
+| Question | Where the answer comes from |
+| --- | --- |
+| "what is wrong with this?" | the real lexer/parser/interpreter error, with its own hint |
+| "what does this do?" | a walk over the real AST — a fourth consumer of the tree |
+| "what does it print?" | the interpreter, actually run |
+| "how do I write a loop?" | retrieval over a knowledge base whose every example the test suite executes |
+| anything else | an optional language model, when one is configured |
+
+That last row is the only one that leaves the machine, and it is off unless
+credentials are present. Everything above it works offline, which is what
+makes the assistant usable in a lab or an exam hall.
+
+The knowledge base cannot drift from the language: its keyword and built-in
+lists are imported from `src/token.ts` and `src/builtins.ts`, and
+`tests/assistant.test.ts` runs every example program it can hand out. An
+assistant that gives you code which does not compile is worse than no
+assistant, so that is a test rather than a hope.
+
+**On the model backend.** `src/assistant/llm.ts` is the only file that knows
+an external service exists. It is injected, never imported by the assistant
+core, so: the browser bundle cannot contain an API key, the compiler keeps
+its no-runtime-dependencies property, and a missing key is simply the offline
+assistant rather than an error. In the playground the key stays on the
+server — the page asks `/api/ask` whether a model is available and forwards
+through it.
+
+```bash
+export ANTHROPIC_API_KEY=...        # optional; everything above works without it
+npm run playground
+```
 
 ## The playground
 
@@ -201,6 +253,7 @@ npm test
 | `errors.test.ts` | all four stages report in the same shape, with the caret in the right column |
 | `wasm.test.ts` | the binary validates, and compiled output matches the interpreter |
 | `examples.test.ts` | every example runs and prints what it should; every broken one fails at the right stage |
+| `assistant.test.ts` | every knowledge example executes; retrieval picks the right lesson; the model backend stays optional |
 
 ---
 
